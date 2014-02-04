@@ -1,9 +1,9 @@
 class Doctor
 	include Mongoid::Document
+	field :id, type: Integer
 	field :url, type: String
 	field :type, type: String
 	field :name, type: String
-	field :id, type: Integer
 
 	validates_presence_of :url
 	validates_uniqueness_of :url
@@ -24,8 +24,17 @@ class Doctor
 
 		p doc.css('#CM_TagNombreMedico')
 
-		self.node.parsed = true
-		self.node.save
+		p doc.css('.description > li')
+		p doc.css('.description > li > li')
+
+		p doc.css('#CM_MainAddress span')
+
+		p doc.css('#CM_lnkWeb').attr('href')
+
+
+
+		# self.node.parsed = true
+		# self.node.save
 
 	end
 
