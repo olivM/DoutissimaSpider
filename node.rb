@@ -31,25 +31,16 @@ class Node
 
 	def check
 
-		p self.url
-
 		if path = self.url.match(/^\/medico\/([\w\d\-\+]+)\-(\d+)$/)
 			self.type = 'medicos'
-			self.name = path[2]
-			self.id = path[1]
-			puts "MEDICOS"
 		end
 
 		if path = self.url.match(/^\/centro-medico\/([\w\d\-\+]+)\-(\d+)$/)
 			self.type = 'hospital'
-			self.name = path[2]
-			self.id = path[1]
 		end
 
 		if path = self.url.match(/^\/sitemap\/medicos\/estado\/([\w\d\-\+]+)\-(\d+)(\/\d+)?$/)
 			self.type = 'estados'
-			self.name = path[2]
-			self.id = path[1]
 		end
 
 		if path = self.url.match(/^\/sitemap\/medicos\/estados\/([\w\d\-\+]+)\-(\d+)\/([\w\d\-\+]+)\-(\d+)(\/\d+)?$/)
@@ -59,23 +50,15 @@ class Node
 			self.type = 'especialidade'
 		end
 
-
 		if path = self.url.match(/^\/medicos\/especialidade\/([\w\d\-\+]+)\-(\d+)\/([\w\d\-\+]+)\-(\d+)\-(\d+)(\/\d+)?$/)
 			self.type = 'especialidade-city'
 		end
-
 
 		if path = self.url.match(/^\/medicos\/especialidade\/([\w\d\-\+]+)\-(\d+)\/([\w\d\-\+]+)\-(\d+)\/([\w\d\-\+]+)\-(\d+)\-(\d+)(\/\d+)?$/)
 			self.type = 'especialidade-city'
 		end
 
-
-		if self.type.nil?
-
-			self.ignored = true
-			puts self.url
-
-		end
+		self.ignored = self.type.nil?
 
 		self.save
 
@@ -87,6 +70,8 @@ class Node
 
 			begin
 				url = "http://webcache.googleusercontent.com/search?q=cache:http://www.doctoralia.com.br#{CGI::escape(self.url)}"
+
+				p url
 
 				page = @@agent.get(url)
 
@@ -105,7 +90,7 @@ class Node
 
 	end
 
-	def process
+	def parse
 
 		doc = Nokogiri::HTML.parse(self.get_body)
 
@@ -115,8 +100,9 @@ class Node
 		end
 
 		case self.type
-		when 'doctor'
-			Doctor.create(node: self)
+		when 'medicos'
+			doctor = Doctor.create(node: self)
+			p doctor
 		end
 
 		self.parsed = true
@@ -128,7 +114,7 @@ class Node
 
 	def self.summary
 
-		puts "node count : #{Node.where(parsed: true).count} / #{Node.where(fetched: true).count} / #{Node.where(ignored: false).count} / #{Node.count}"
+		puts "#{Node.where(parsed: true).count} parsed / #{Node.where(fetched: true).count} fetched / #{Node.where(ignored: false).count} ignored / #{Node.count} total"
 
 		Node.distinct(:type).each do |type|
 

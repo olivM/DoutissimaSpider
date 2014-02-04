@@ -33,6 +33,8 @@ namespace :crawl do
 
 	end
 
+
+
 	desc "process"
 	task :process do
 
@@ -49,7 +51,7 @@ namespace :crawl do
 
 			puts "#{Node.where(type: type).count} #{type}"
 
-			Node.where(type: type, parsed: false, ignored: false).limit(3).each do |node|
+			Node.where(type: type, parsed: false, ignored: false).sort(random: 1).limit(3).each do |node|
 				p node.url
 				node.process
 			end
@@ -73,15 +75,42 @@ namespace :crawl do
 		  abort "You're already running a crawling process! Know a patience."
 		end
 
-		Node.where(type: 'medicos', parsed: false).sort(random: 1).limit(1).each do |node|
+		# Node.all.unset(:parsed)
+
+		Node.where(type: 'medicos', parsed: false, fetched: true).sort(random: 1).limit(10).each do |node|
 			p node.url
-			node.process
+			node.parse
 		end
 
 		Node.summary
 
 	end
 
+
+
+	desc "check"
+	task :check do
+
+		puts Time.now.to_s.yellow
+		puts __FILE__
+
+		# don't overlap
+		myself = File.new __FILE__
+		unless  myself.flock File::LOCK_EX | File::LOCK_NB
+		  abort "You're already running a crawling process! Know a patience."
+		end
+
+		# Node.all.unset(:type)
+		# Node.all.unset(:ignored)
+
+		Node.where(type: nil, ignored: nil).each do |node|
+			print '.'
+			node.check
+		end
+
+		Node.summary
+
+	end
 
 
 end
